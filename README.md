@@ -62,6 +62,33 @@ Trie这个术语来自于retrieval。trie的发明者Edward Fredkin把它读作/
 - 练习 5 - 使用 AI编码助手 生成单元测试代码
 - 练习 6 - 使用 AI编码助手 生成Git提交注释
 
+## 如何使用和运行
+
+安装依赖
+
+```
+## 使用阿里云代理
+npm config set registry https://registry.npmmirror.com
+npm config get registry
+## 恢复默认
+npm config set registry https://registry.npmjs.org
+
+## 安装依赖
+npm install
+```
+
+运行代码
+
+```
+npm start
+```
+
+运行测试
+
+```
+npm test
+```
+
 ## 联系我们
 
 如果您在使用 **AI编码助手** 的过程中遇到任何问题，或者您有任何建议和反馈，请随时联系我们。您可以通过以下方式联系我们：
