@@ -98,7 +98,7 @@ class Trie {
     levenshteinDistance(s, t) {
         let m = s.length;
         let n = t.length;
-        let d = Array.from(Array(m + 1), () => Array(n + 1).fill(0));
+        let d = Array.from(Array(m), () => Array(n).fill(0));
 
         if (m == 0) {
             return n;
@@ -119,7 +119,7 @@ class Trie {
         for (let j = 1; j <= n; j++) {
             for (let i = 1; i <= m; i++) {
                 let cost = (s[i - 1] === t[j - 1]) ? 0 : 1;
-                d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+                d[i][j] = Math.min(d[i - 1][j], d[i][j - 1], d[i - 1][j - 1] + cost);
             }
         }
 
