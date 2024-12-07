@@ -117,26 +117,21 @@ function getPrefixInput() {
         output: process.stdout,
         terminal: true
     });
-
     let running = true;
     let prefix = "";
     let sb = [];
     let words = null;
     let wordsIndex = 0;
-
     readline.emitKeypressEvents(process.stdin);
     process.stdin.setRawMode(true);
-
     process.stdin.on('keypress', (str, key) => {
         if (!running) return;
-
         switch(key.name) {
             case 'space':
                 process.stdout.write(' ');
                 prefix = "";
                 sb.push(' ');
                 break;
-
             case 'backspace':
                 if (sb.length > 0) {
                     process.stdout.write('\b \b');
@@ -144,22 +139,18 @@ function getPrefixInput() {
                     prefix = sb.join('').split(' ').pop() || "";
                 }
                 break;
-
             case 'return':
                 process.stdout.write('\n');
                 running = false;
                 rl.close();
                 break;
-
             case 'tab':
                 if (prefix.length > 1) {
                     // Prevent default tab behavior
                     key.preventDefault?.();
-
                     // Clear the current line before completion
                     process.stdout.write('\r' + ' '.repeat(process.stdout.columns));
                     process.stdout.write('\r');
-
                     let currentInput = sb.join('');
                     let previousWord = currentInput.split(' ').pop() || "";
                     
@@ -168,11 +159,9 @@ function getPrefixInput() {
                         words = dictionary.autoSuggest(prefix);
                         wordsIndex = 0;
                     }
-
                     // Rewrite the current input up to the prefix
                     let inputBeforeCompletion = currentInput.slice(0, currentInput.lastIndexOf(previousWord));
                     process.stdout.write(inputBeforeCompletion);
-
                     // Add new word completion
                     if (words && words.length > 0) {
                         const output = words[wordsIndex];
@@ -185,11 +174,10 @@ function getPrefixInput() {
                     }
                 }
                 break;
-
             default:
                 // Ensure only single characters are processed
                 if (str && str.length === 1 && !key.ctrl && !key.meta) {
-                    process.stdout.write(str);
+                    // Remove the duplicate character writing
                     sb.push(str);
                     prefix += str;
                     words = null;
@@ -197,7 +185,6 @@ function getPrefixInput() {
                 }
         }
     });
-
     // Ensure input is possible
     process.stdin.on('data', (chunk) => {
         // Do nothing - just keep the input channel open
