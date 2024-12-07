@@ -112,10 +112,10 @@ function runAllExercises() {
 
 function getPrefixInput() {
     console.log("\nEnter a prefix to search for, then press Tab to cycle through search results. Press Enter to exit.");
-
     const rl = readline.createInterface({
         input: process.stdin,
-        output: process.stdout
+        output: process.stdout,
+        terminal: true
     });
 
     let running = true;
@@ -124,54 +124,83 @@ function getPrefixInput() {
     let words = null;
     let wordsIndex = 0;
 
-    process.stdin.on('keypress', (char, key) => {
-        if (key.name === 'space') {
-            process.stdout.write(' ');
-            prefix = "";
-            sb.push(' ');
-        } else if (key.name === 'backspace' && process.stdout.cursorTo > 0) {
-            process.stdout.cursorTo(process.stdout.cursorTo - 1);
-            process.stdout.write(' ');
-            process.stdout.cursorTo(process.stdout.cursorTo - 1);
+    readline.emitKeypressEvents(process.stdin);
+    process.stdin.setRawMode(true);
 
-            sb.pop();
-            prefix = sb.join('').split(' ').pop();
-        } else if (key.name === 'return') {
-            console.log();
-            running = false;
-            rl.close();
-        } else if (key.name === 'tab' && prefix.length > 1) {
-            const previousWord = sb.join('').split(' ').pop();
+    process.stdin.on('keypress', (str, key) => {
+        if (!running) return;
 
-            if (words) {
-                if (previousWord !== words[wordsIndex - 1]) {
-                    words = dictionary.autoSuggest(prefix);
+        switch(key.name) {
+            case 'space':
+                process.stdout.write(' ');
+                prefix = "";
+                sb.push(' ');
+                break;
+
+            case 'backspace':
+                if (sb.length > 0) {
+                    process.stdout.write('\b \b');
+                    sb.pop();
+                    prefix = sb.join('').split(' ').pop() || "";
+                }
+                break;
+
+            case 'return':
+                process.stdout.write('\n');
+                running = false;
+                rl.close();
+                break;
+
+            case 'tab':
+                if (prefix.length > 1) {
+                    // Prevent default tab behavior
+                    key.preventDefault?.();
+
+                    // Clear the current line before completion
+                    process.stdout.write('\r' + ' '.repeat(process.stdout.columns));
+                    process.stdout.write('\r');
+
+                    let currentInput = sb.join('');
+                    let previousWord = currentInput.split(' ').pop() || "";
+                    
+                    // Refresh words list if needed
+                    if (!words || previousWord !== words[wordsIndex - 1]) {
+                        words = dictionary.autoSuggest(prefix);
+                        wordsIndex = 0;
+                    }
+
+                    // Rewrite the current input up to the prefix
+                    let inputBeforeCompletion = currentInput.slice(0, currentInput.lastIndexOf(previousWord));
+                    process.stdout.write(inputBeforeCompletion);
+
+                    // Add new word completion
+                    if (words && words.length > 0) {
+                        const output = words[wordsIndex];
+                        wordsIndex = (wordsIndex + 1) % words.length;
+                        process.stdout.write(output);
+                        
+                        // Reset state
+                        sb = (inputBeforeCompletion + output).split('');
+                        prefix = prefix;
+                    }
+                }
+                break;
+
+            default:
+                // Ensure only single characters are processed
+                if (str && str.length === 1 && !key.ctrl && !key.meta) {
+                    process.stdout.write(str);
+                    sb.push(str);
+                    prefix += str;
+                    words = null;
                     wordsIndex = 0;
                 }
-            } else {
-                words = dictionary.autoSuggest(prefix);
-                wordsIndex = 0;
-            }
-
-            for (let i = prefix.length; i < previousWord.length; i++) {
-                process.stdout.cursorTo(process.stdout.cursorTo - 1);
-                process.stdout.write(' ');
-                process.stdout.cursorTo(process.stdout.cursorTo - 1);
-                sb.pop();
-            }
-
-            if (words.length > 0 && wordsIndex < words.length) {
-                const output = words[wordsIndex++];
-                process.stdout.write(output.substring(prefix.length));
-                sb.push(...output.substring(prefix.length));
-            }
-        } else if (key.name !== 'tab') {
-            process.stdout.write(char);
-            prefix += char;
-            sb.push(char);
-            words = null;
-            wordsIndex = 0;
         }
+    });
+
+    // Ensure input is possible
+    process.stdin.on('data', (chunk) => {
+        // Do nothing - just keep the input channel open
     });
 }
 
